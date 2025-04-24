@@ -1,0 +1,104 @@
+@model ShinSerwis.Models.Appointment
+
+@{
+    ViewData["Title"] = "Детали записи";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Детали записи #@Model.Id</h4>
+            <a asp-action="Index" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left"></i> Назад к списку
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3 border-bottom pb-2">Информация о записи</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Дата и время:</dt>
+                        <dd class="col-sm-8">@Model.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4">Услуга:</dt>
+                        <dd class="col-sm-8">@Model.Service.Name</dd>
+
+                        <dt class="col-sm-4">Стоимость:</dt>
+                        <dd class="col-sm-8">@Model.Service.Price.ToString("N0") руб.</dd>
+
+                        <dt class="col-sm-4">Статус:</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var statusClass = Model.Status switch
+                                {
+                                    ShinSerwis.Models.AppointmentStatus.Pending => "bg-warning text-dark",
+                                    ShinSerwis.Models.AppointmentStatus.InProgress => "bg-info text-white",
+                                    ShinSerwis.Models.AppointmentStatus.Completed => "bg-success text-white",
+                                    ShinSerwis.Models.AppointmentStatus.Cancelled => "bg-danger text-white",
+                                    _ => "bg-secondary text-white"
+                                };
+                                var statusText = Model.Status switch
+                                {
+                                    ShinSerwis.Models.AppointmentStatus.Pending => "Ожидает",
+                                    ShinSerwis.Models.AppointmentStatus.InProgress => "В процессе",
+                                    ShinSerwis.Models.AppointmentStatus.Completed => "Завершено",
+                                    ShinSerwis.Models.AppointmentStatus.Cancelled => "Отменено",
+                                    _ => Model.Status.ToString()
+                                };
+                            }
+                            <span class="badge @statusClass">@statusText</span>
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="mb-3 border-bottom pb-2">Информация об автомобиле</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Номер:</dt>
+                        <dd class="col-sm-8">@Model.Car.LicensePlate</dd>
+
+                        <dt class="col-sm-4">Марка:</dt>
+                        <dd class="col-sm-8">@Model.Car.Brand</dd>
+
+                        <dt class="col-sm-4">Модель:</dt>
+                        <dd class="col-sm-8">@Model.Car.Model</dd>
+
+                        <dt class="col-sm-4">Год:</dt>
+                        <dd class="col-sm-8">@Model.Car.Year</dd>
+
+                        <dt class="col-sm-4">VIN:</dt>
+                        <dd class="col-sm-8">@Model.Car.VIN</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="mt-4">
+                    <h5 class="mb-3 border-bottom pb-2">Примечания</h5>
+                    <div class="p-3 bg-light rounded">
+                        <pre class="mb-0">@Model.Notes</pre>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <div class="d-flex justify-content-between">
+                    @if (Model.Status == ShinSerwis.Models.AppointmentStatus.Pending)
+                    {
+                        <form asp-action="Cancel" method="post" onsubmit="return confirm('Вы уверены, что хотите отменить запись?');">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Отменить запись
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div></div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

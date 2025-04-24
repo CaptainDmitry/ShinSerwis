@@ -1,0 +1,264 @@
+@model ShinSerwis.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Личный кабинет";
+}
+
+<div class="container">
+    <div class="row">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="col-12">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="col-12">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Профиль</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Имя:</strong> @Model.User.FirstName @Model.User.LastName</p>
+                    <p><strong>Email:</strong> @Model.User.Email</p>
+                    <p><strong>Телефон:</strong> @Model.User.PhoneNumber</p>
+                    <a asp-action="Edit" class="btn btn-primary">Редактировать профиль</a>
+                </div>
+            </div>
+
+            @if (!User.IsInRole("Employee") && !User.IsInRole("Admin"))
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Мои автомобили</h3>
+                        <a asp-action="AddCar" class="btn btn-success btn-sm">Добавить автомобиль</a>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Cars.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var car in Model.Cars)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">@car.Brand @car.Model</h5>
+                                                <p class="mb-1">Гос. номер: <strong>@car.LicensePlate</strong></p>
+                                                <small>Год выпуска: @car.Year</small>
+                                                @if (!string.IsNullOrEmpty(car.VIN))
+                                                {
+                                                    <br/><small>VIN: @car.VIN</small>
+                                                }
+                                            </div>
+                                            <div>
+                                                <a asp-action="EditCar" asp-route-id="@car.Id" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Редактировать</a>
+                                                <form asp-action="DeleteCar" asp-route-id="@car.Id" method="post" style="display:inline;" onsubmit="return confirm('Вы уверены, что хотите удалить этот автомобиль?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bi bi-trash"></i> Удалить
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <p>У вас пока нет добавленных автомобилей</p>
+                                <a asp-action="AddCar" class="btn btn-primary">Добавить первый автомобиль</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Мои записи</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.Appointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Дата и время</th>
+                                        <th>Услуга</th>
+                                        <th>Автомобиль</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model.Appointments)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong class="d-block" id="local-time-@appointment.Id"></strong>
+                                                <div class="small text-muted mt-1">
+                                                    Серверное время (UTC): 
+                                                    <span class="utc-date" data-utc-date="@appointment.AppointmentDate.ToString("o")">
+                                                        @appointment.AppointmentDate.ToString("dd.MM.yyyy HH:mm")
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>@appointment.Service.Name</td>
+                                            <td>@appointment.Car.Brand @appointment.Car.Model (@appointment.Car.LicensePlate)</td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(appointment.Status)">
+                                                    @GetStatusText(appointment.Status)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (appointment.Status == AppointmentStatus.Pending)
+                                                {
+                                                    <form asp-controller="Appointment" asp-action="Cancel" asp-route-id="@appointment.Id" method="post" style="display:inline;">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены, что хотите отменить запись?');">
+                                                            <i class="fas fa-times"></i> Отменить
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>У вас пока нет записей на обслуживание</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function formatDate(date, includeSeconds = false) {
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false
+            };
+            
+            if (includeSeconds) {
+                options.second = '2-digit';
+            }
+            
+            return new Intl.DateTimeFormat(navigator.language || 'ru-RU', options).format(date);
+        }
+
+        function convertDates() {
+            console.log('Начинаем конвертацию UTC дат в локальное время...');
+            
+            const dateElements = document.querySelectorAll('.utc-date');
+            console.log(`Найдено ${dateElements.length} элементов для конвертации`);
+            
+            if (dateElements.length === 0) {
+                console.log('Элементы для конвертации не найдены. Пробуем через 500мс...');
+                setTimeout(convertDates, 500);
+                return;
+            }
+
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            console.log(`Ваш часовой пояс: ${timeZone}`);
+            
+            dateElements.forEach((element, index) => {
+                const isoDate = element.getAttribute('data-utc-date');
+                if (!isoDate) {
+                    console.error(`Элемент #${index} не имеет атрибута data-utc-date`);
+                    return;
+                }
+                
+                try {
+                    const elementId = element.closest('tr').querySelector('[id^="local-time-"]').id;
+                    const appointmentId = elementId.split('-')[2];
+                    
+                    const utcDate = new Date(isoDate);
+                    if (isNaN(utcDate.getTime())) {
+                        console.error(`Некорректная дата: ${isoDate}`);
+                        return;
+                    }
+                    
+                    const localDateStr = formatDate(utcDate);
+                    console.log(`Конвертация для записи #${appointmentId}: ${isoDate} -> ${localDateStr}`);
+                    
+                    const localTimeElement = document.getElementById(`local-time-${appointmentId}`);
+                    if (localTimeElement) {
+                        localTimeElement.textContent = `Ваше местное время: ${localDateStr}`;
+                        localTimeElement.title = `Часовой пояс: ${timeZone}`;
+                    } else {
+                        console.error(`Не найден элемент для локального времени с ID local-time-${appointmentId}`);
+                    }
+                } catch (error) {
+                    console.error(`Ошибка при обработке даты: ${error.message}`);
+                }
+            });
+            
+            console.log('Конвертация завершена');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', convertDates);
+        } else {
+            convertDates();
+        }
+        
+        window.addEventListener('load', function() {
+            setTimeout(convertDates, 500);
+            setTimeout(convertDates, 1500);
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Pending => "bg-warning",
+            AppointmentStatus.InProgress => "bg-info",
+            AppointmentStatus.Completed => "bg-success",
+            AppointmentStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetStatusText(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Pending => "Ожидает",
+            AppointmentStatus.InProgress => "В процессе",
+            AppointmentStatus.Completed => "Завершено",
+            AppointmentStatus.Cancelled => "Отменено",
+            _ => "Неизвестно"
+        };
+    }
+} 

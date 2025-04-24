@@ -1,0 +1,152 @@
+@model ShinSerwis.ViewModels.AddCarViewModel
+
+@{
+    ViewData["Title"] = "Добавление автомобиля";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h2>Добавление автомобиля</h2>
+            </div>
+            <div class="card-body">
+                <form action="/Profile/AddCarDirect" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    @Html.AntiForgeryToken()
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    
+                    <div class="form-group mb-3">
+                        <label for="Brand" class="control-label">Марка</label>
+                        <input id="Brand" name="Brand" class="form-control" value="@Model?.Brand" />
+                        @if (ViewData.ModelState["Brand"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger">@ViewData.ModelState["Brand"].Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="Model" class="control-label">Модель</label>
+                        <input id="Model" name="Model" class="form-control" value="@Model?.Model" />
+                        @if (ViewData.ModelState["Model"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger">@ViewData.ModelState["Model"].Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="LicensePlate" class="control-label">Гос. номер</label>
+                        <input id="LicensePlate" name="LicensePlate" class="form-control" value="@Model?.LicensePlate" />
+                        @if (ViewData.ModelState["LicensePlate"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger">@ViewData.ModelState["LicensePlate"].Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="Year" class="control-label">Год выпуска</label>
+                        <input id="Year" name="Year" class="form-control" value="@Model?.Year" />
+                        @if (ViewData.ModelState["Year"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger">@ViewData.ModelState["Year"].Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="VIN" class="control-label">VIN-код</label>
+                        <div class="input-group">
+                            <input id="VIN" name="VIN" class="form-control" placeholder="Необязательное поле" value="@Model?.VIN" />
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearVIN()">Очистить</button>
+                        </div>
+                        <small class="form-text text-muted">Не обязательно для заполнения. Если указываете, должно быть ровно 17 символов.</small>
+                        @if (ViewData.ModelState["VIN"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger">@ViewData.ModelState["VIN"].Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <a href="/Profile" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function clearVIN() {
+            document.getElementById('VIN').value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const vinInput = document.getElementById('VIN');
+            const brandInput = document.getElementById('Brand');
+            const modelInput = document.getElementById('Model');
+            const yearInput = document.getElementById('Year');
+            const licenseInput = document.getElementById('LicensePlate');
+            
+            form.addEventListener('submit', function(e) {
+                console.log('Form submission intercepted');
+                console.log('Brand value:', brandInput.value);
+                console.log('Model value:', modelInput.value);
+                console.log('Year value:', yearInput.value);
+                console.log('License value:', licenseInput.value);
+                console.log('VIN value:', vinInput.value);
+                
+                if (vinInput.value && vinInput.value.trim().length === 0) {
+                    vinInput.value = '';
+                }
+                
+                let hasError = false;
+                
+                if (!brandInput.value || brandInput.value.trim() === '') {
+                    alert('Марка автомобиля обязательна');
+                    e.preventDefault();
+                    hasError = true;
+                }
+                
+                if (!modelInput.value || modelInput.value.trim() === '') {
+                    alert('Модель автомобиля обязательна');
+                    e.preventDefault();
+                    hasError = true;
+                }
+                
+                if (!yearInput.value || yearInput.value.trim() === '') {
+                    alert('Год выпуска обязателен');
+                    e.preventDefault();
+                    hasError = true;
+                }
+                
+                if (!licenseInput.value || licenseInput.value.trim() === '') {
+                    alert('Гос. номер обязателен');
+                    e.preventDefault();
+                    hasError = true;
+                }
+                
+                if (vinInput.value && vinInput.value.trim().length > 0 && vinInput.value.trim().length !== 17) {
+                    alert('VIN-код должен состоять из 17 символов или быть пустым');
+                    e.preventDefault();
+                    hasError = true;
+                }
+                
+                return !hasError;
+            });
+        });
+    </script>
+} 

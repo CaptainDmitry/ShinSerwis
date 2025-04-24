@@ -1,0 +1,239 @@
+﻿@model IEnumerable<ShinSerwis.Models.Service>
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/hero-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 120px 0;
+        margin-bottom: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        border: none;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .service-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: none;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .service-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+    
+    .btn-primary {
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
+    }
+    
+    .section-title {
+        position: relative;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1rem;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        height: 3px;
+        background: #0d6efd;
+    }
+    
+    .contact-info {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .contact-icon {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 20px;
+        margin-right: 15px;
+    }
+</style>
+
+<section class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">ШИНСЕРВИС - Профессиональное обслуживание автомобилей</h1>
+        <p class="lead mb-5">Доверьте ваш автомобиль профессионалам. Качественный сервис, современное оборудование и квалифицированные мастера.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a asp-controller="Service" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-tools me-2"></i>Наши услуги
+            </a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Регистрация
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Почему выбирают нас</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card card h-100 p-4 text-center">
+                    <div class="feature-icon text-primary">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <h3>Опыт и профессионализм</h3>
+                    <p class="text-muted">Наши мастера имеют многолетний опыт и регулярно проходят курсы повышения квалификации</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card card h-100 p-4 text-center">
+                    <div class="feature-icon text-primary">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3>Современное оборудование</h3>
+                    <p class="text-muted">Мы используем только современное оборудование и оригинальные запчасти для обслуживания</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card card h-100 p-4 text-center">
+                    <div class="feature-icon text-primary">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Гарантия качества</h3>
+                    <p class="text-muted">Предоставляем гарантию на все виды выполненных работ и используемые материалы</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Наши услуги</h2>
+        <div class="row g-4">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var service in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="service-card card h-100">
+                            <div class="card-body p-4 text-center">
+                                <div class="service-icon">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                                <h3>@service.Name</h3>
+                                <p class="text-muted">@service.Description</p>
+                                <p class="fw-bold">@service.Price.ToString("C")</p>
+                                <a asp-controller="Service" asp-action="Index" class="btn btn-outline-primary mt-3">Подробнее</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <p>На данный момент нет доступных услуг</p>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-5">
+            <a asp-controller="Service" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-list me-2"></i>Все услуги
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Наши контакты</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="d-flex contact-info">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <h5>Адрес</h5>
+                        <p class="mb-0">г. Москва, ул. Автомобильная, 123</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex contact-info">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <div>
+                        <h5>Телефон</h5>
+                        <p class="mb-0">+7 (123) 456-78-90</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex contact-info">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h5>Email</h5>
+                        <p class="mb-0">info@shinserwis.ru</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-5 text-center">
+            <a asp-controller="Appointment" asp-action="Create" class="btn btn-primary btn-lg">
+                <i class="fas fa-calendar-check me-2"></i>Записаться на обслуживание
+            </a>
+        </div>
+    </div>
+</section>

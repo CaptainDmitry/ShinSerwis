@@ -1,0 +1,360 @@
+@model Dictionary<string, object>
+
+@{
+    ViewData["Title"] = "Статистика";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Статистика системы</h1>
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Общая информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center">
+                                    <h3 class="display-4">@Model["TotalClients"]</h3>
+                                    <p class="card-text text-muted">Клиентов</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center">
+                                    <h3 class="display-4">@Model["TotalEmployees"]</h3>
+                                    <p class="card-text text-muted">Сотрудников</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center">
+                                    <h3 class="display-4">@Model["TotalCars"]</h3>
+                                    <p class="card-text text-muted">Автомобилей</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center">
+                                    <h3 class="display-4">@Model["TotalServices"]</h3>
+                                    <p class="card-text text-muted">Услуг</p>
+                                    <small class="text-success">
+                                        Активных: @Model["ActiveServices"]
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Записи на обслуживание</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Всего: @Model["TotalAppointments"]</h3>
+                    <canvas id="appointmentsChart" width="100%" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Ожидающие:</span>
+                            <span class="badge bg-warning">@Model["PendingAppointments"]</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>В процессе:</span>
+                            <span class="badge bg-info">@Model["InProgressAppointments"]</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Завершенные:</span>
+                            <span class="badge bg-success">@Model["CompletedAppointments"]</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Отмененные:</span>
+                            <span class="badge bg-danger">@Model["CancelledAppointments"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Финансовая информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h5>Доход за месяц</h5>
+                        <h2 class="display-4 text-success">@(((decimal)Model["MonthlyRevenue"]).ToString("C0"))</h2>
+                    </div>
+                    <div class="text-center">
+                        <h5>Общий доход</h5>
+                        <h3 class="text-success">@(((decimal)Model["TotalRevenue"]).ToString("C0"))</h3>
+                    </div>
+                    <div class="alert alert-info mt-4">
+                        <p class="mb-0 text-center">
+                            <i class="fas fa-info-circle"></i>
+                            Средний доход за запись: 
+                            @{
+                                decimal avgRevenue = (int)Model["CompletedAppointments"] > 0 
+                                    ? (decimal)Model["TotalRevenue"] / (int)Model["CompletedAppointments"] 
+                                    : 0;
+                            }
+                            <strong>@avgRevenue.ToString("C0")</strong>
+                        </p>
+                    </div>
+                    
+                    <h5 class="mt-4 text-center">Детализация по услугам</h5>
+                    @{
+                        var serviceStats = Model["ServiceStatistics"] as IEnumerable<dynamic>;
+                    }
+                    
+                    @if (serviceStats != null && serviceStats.Any())
+                    {
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-striped table-hover">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Услуга</th>
+                                        <th class="text-center">Количество</th>
+                                        <th class="text-end">Доход</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var completedServices = Model["CompletedServices"] as IEnumerable<dynamic>;
+                                        
+                                        if (completedServices == null)
+                                        {
+                                            completedServices = serviceStats.Select(s => new
+                                            {
+                                                s.ServiceName,
+                                                s.Count,
+                                                Revenue = 0
+                                            });
+                                        }
+                                    }
+                                    
+                                    @foreach (var item in completedServices)
+                                    {
+                                        <tr>
+                                            <td>@item.ServiceName</td>
+                                            <td class="text-center">@item.Count</td>
+                                            <td class="text-end">@(item.Revenue.ToString("C0"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-success">
+                                    <tr>
+                                        <th>Итого</th>
+                                        <th class="text-center">@completedServices.Sum(s => s.Count)</th>
+                                        <th class="text-end">@(((decimal)Model["TotalRevenue"]).ToString("C0"))</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <p class="mb-0 text-center">Нет данных о завершенных записях</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">Популярные услуги</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        serviceStats = Model["ServiceStatistics"] as IEnumerable<dynamic>;
+                    }
+                    
+                    @if (serviceStats != null && serviceStats.Any())
+                    {
+                        <canvas id="servicesChart" width="100%" height="250"></canvas>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <p class="mb-0 text-center">Нет данных о завершенных записях на услуги</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">Загруженность по дням недели</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var dayStats = Model["DayOfWeekStatistics"] as IEnumerable<dynamic>;
+                    }
+                    
+                    @if (dayStats != null && dayStats.Any())
+                    {
+                        <canvas id="weekdaysChart" width="100%" height="250"></canvas>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <p class="mb-0 text-center">Нет данных о записях по дням недели</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Вернуться в панель управления
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+            new Chart(appointmentsCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Ожидающие', 'В процессе', 'Завершенные', 'Отмененные'],
+                    datasets: [{
+                        data: [
+                            @Model["PendingAppointments"],
+                            @Model["InProgressAppointments"],
+                            @Model["CompletedAppointments"],
+                            @Model["CancelledAppointments"]
+                        ],
+                        backgroundColor: [
+                            '#ffc107', // warning - ожидающие
+                            '#17a2b8', // info - в процессе
+                            '#28a745', // success - завершенные
+                            '#dc3545'  // danger - отмененные
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            @{
+                var services = Model["ServiceStatistics"] as IEnumerable<dynamic>;
+                if (services != null && services.Any())
+                {
+                    <text>
+                    const servicesCtx = document.getElementById('servicesChart').getContext('2d');
+                    new Chart(servicesCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [@Html.Raw(string.Join(", ", services.Select(s => $"'{s.ServiceName}'")))],
+                            datasets: [{
+                                label: 'Количество записей',
+                                data: [@Html.Raw(string.Join(", ", services.Select(s => s.Count)))],
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.2)',
+                                    'rgba(54, 162, 235, 0.2)',
+                                    'rgba(255, 206, 86, 0.2)',
+                                    'rgba(75, 192, 192, 0.2)',
+                                    'rgba(153, 102, 255, 0.2)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(153, 102, 255, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                    </text>
+                }
+            }
+            
+            @{
+                var days = Model["DayOfWeekStatistics"] as IEnumerable<dynamic>;
+                if (days != null && days.Any())
+                {
+                    <text>
+                    const dayNames = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                    const weekdaysCtx = document.getElementById('weekdaysChart').getContext('2d');
+                    
+                    const dayLabels = [@Html.Raw(string.Join(", ", days.Select(d => d.DayOfWeek)))].map(day => dayNames[day]);
+                    
+                    new Chart(weekdaysCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dayLabels,
+                            datasets: [{
+                                label: 'Количество записей',
+                                data: [@Html.Raw(string.Join(", ", days.Select(d => d.Count)))],
+                                fill: false,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    </text>
+                }
+            }
+        });
+    </script>
+} 

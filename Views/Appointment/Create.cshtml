@@ -1,0 +1,326 @@
+@model ShinSerwis.Models.Appointment
+
+@{
+    ViewData["Title"] = "Запись на услугу";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Новая запись</h4>
+        </div>
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-3">
+                    <h5><i class="bi bi-exclamation-triangle-fill"></i> Произошли ошибки:</h5>
+                    <ul class="mb-0">
+                        @foreach (var state in ViewData.ModelState)
+                        {
+                            @foreach (var error in state.Value.Errors)
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        }
+                    </ul>
+                </div>
+            }
+            
+            <form asp-controller="Appointment" asp-action="Create" method="post" id="appointmentForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="ServiceId" class="form-label">Услуга <span class="text-danger">*</span></label>
+                            <select asp-for="ServiceId" class="form-select" required>
+                                <option value="">-- Выберите услугу --</option>
+                                @if (ViewBag.Services != null && ViewBag.Services.Count > 0)
+                                {
+                                    foreach (var service in ViewBag.Services)
+                                    {
+                                        <option value="@service.Id" 
+                                                data-price="@service.Price" 
+                                                data-duration="@service.DurationMinutes">
+                                            @service.Name - @service.Price.ToString("C")
+                                        </option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option disabled>Нет доступных услуг</option>
+                                }
+                            </select>
+                            <span asp-validation-for="ServiceId" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="CarId" class="form-label">Автомобиль <span class="text-danger">*</span></label>
+                            @if (ViewBag.Cars != null && ViewBag.Cars.Count > 0)
+                            {
+                                <select asp-for="CarId" class="form-select" required>
+                                    <option value="">-- Выберите автомобиль --</option>
+                                    @foreach (var car in ViewBag.Cars)
+                                    {
+                                        <option value="@car.Id">
+                                            @car.Brand @car.Model (@car.Year) - @car.LicensePlate
+                                        </option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CarId" class="text-danger"></span>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    У вас еще нет добавленных автомобилей. 
+                                    <a asp-controller="Profile" asp-action="AddCar">Добавить автомобиль</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Дата <span class="text-danger">*</span></label>
+                            <input id="appointmentDatePicker" type="date" class="form-control" required 
+                                   min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" />
+                            
+                            <div class="mt-3 mb-3">
+                                <label class="form-label">Время <span class="text-danger">*</span></label>
+                                <div id="timeSlotContainer" class="d-none">
+                                    <select id="timeSlotSelect" class="form-select">
+                                        <option value="">Выберите время</option>
+                                    </select>
+                                    <div class="form-text">Выберите доступное время для записи</div>
+                                </div>
+                                <div id="noTimeSlotsMessage" class="d-none alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Нет доступных временных слотов на выбранную дату
+                                </div>
+                                <div id="timeSlotLoading" class="d-none">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Загрузка...</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-center mt-2">Загрузка доступных временных слотов...</p>
+                                </div>
+                            </div>
+                            
+                            <input asp-for="AppointmentDate" type="hidden" class="form-control" required />
+                            <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                        </div>
+                        
+                        <div id="serviceDetails" class="card bg-light mb-3 d-none">
+                            <div class="card-body">
+                                <h5 class="card-title">Детали услуги</h5>
+                                <p>Стоимость: <span id="servicePrice">0</span> руб.</p>
+                                <p>Длительность: <span id="serviceDuration">0</span> минут</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a asp-controller="Service" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Назад к услугам
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        <i class="bi bi-calendar-check"></i> Записаться
+                    </button>
+                </div>
+                
+                @Html.AntiForgeryToken()
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        console.log('Загружена страница создания записи');
+        
+        $(document).ready(function() {
+            console.log('DOM готов');
+            
+            $('#ServiceId').change(function() {
+                console.log('Выбрана услуга: ' + $(this).val());
+                const selected = $(this).find('option:selected');
+                const price = selected.data('price');
+                const duration = selected.data('duration');
+                
+                if (price && duration) {
+                    $('#servicePrice').text(new Intl.NumberFormat('ru-RU').format(price));
+                    $('#serviceDuration').text(duration);
+                    $('#serviceDetails').removeClass('d-none');
+                } else {
+                    $('#serviceDetails').addClass('d-none');
+                }
+            });
+            
+            if ($('#ServiceId').val()) {
+                console.log('Услуга уже выбрана: ' + $('#ServiceId').val());
+                $('#ServiceId').trigger('change');
+            }
+            
+            const now = new Date();
+            const minDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+            const minDateString = minDate.toISOString().slice(0, 16);
+            $('#AppointmentDate').attr('min', minDateString);
+            
+            const dailyAppointments = {
+                @foreach (var item in (Dictionary<DateTime, int>)ViewBag.DailyAppointments)
+                {
+                    <text>'@item.Key.ToString("yyyy-MM-dd")': @item.Value,</text>
+                }
+            };
+            
+            const maxDailyAppointments = @ViewBag.MaxDailyAppointments;
+            let selectedTimeSlot = null;
+            
+            function loadTimeSlots() {
+                const selectedDate = $('#appointmentDatePicker').val();
+                const serviceId = $('#ServiceId').val();
+                
+                selectedTimeSlot = null;
+                $('#AppointmentDate').val('');
+                
+                if (!selectedDate || !serviceId) {
+                    $('#timeSlotContainer').addClass('d-none');
+                    $('#noTimeSlotsMessage').addClass('d-none');
+                    $('#timeSlotLoading').addClass('d-none');
+                    return;
+                }
+                
+                $('#timeSlotContainer').addClass('d-none');
+                $('#noTimeSlotsMessage').addClass('d-none');
+                $('#timeSlotLoading').removeClass('d-none');
+                
+                $.ajax({
+                    url: '@Url.Action("GetTimeSlots", "Appointment")',
+                    type: 'GET',
+                    data: {
+                        date: selectedDate,
+                        serviceId: serviceId
+                    },
+                    success: function(response) {
+                        $('#timeSlotLoading').addClass('d-none');
+                        
+                        if (response.success) {
+                            const availableSlots = response.availableSlots;
+                            
+                            if (availableSlots.length > 0) {
+                                $('#timeSlotContainer').removeClass('d-none');
+                                
+                                let timeSlotsHtml = '<option value="">Выберите время</option>';
+                                availableSlots.forEach(function(slot) {
+                                    timeSlotsHtml += `<option value="${slot}">${slot}</option>`;
+                                });
+                                
+                                $('#timeSlotSelect').html(timeSlotsHtml);
+                                
+                                $('#timeSlotSelect').change(function() {
+                                    selectedTimeSlot = $(this).val();
+                                    if (selectedTimeSlot) {
+                                        const selectedDateTimeStr = `${selectedDate}T${selectedTimeSlot}:00`;
+                                        $('#AppointmentDate').val(selectedDateTimeStr);
+                                        
+                                        $('[data-valmsg-for="AppointmentDate"]').text('');
+                                    } else {
+                                        $('#AppointmentDate').val('');
+                                    }
+                                });
+                            } else {
+                                $('#noTimeSlotsMessage').removeClass('d-none');
+                            }
+                        } else {
+                            $('#noTimeSlotsMessage').removeClass('d-none').text(response.message || 'Ошибка при загрузке временных слотов');
+                        }
+                    },
+                    error: function() {
+                        $('#timeSlotLoading').addClass('d-none');
+                        $('#noTimeSlotsMessage').removeClass('d-none').text('Ошибка при загрузке временных слотов. Попробуйте позже.');
+                    }
+                });
+            }
+            
+            $('#appointmentDatePicker').change(loadTimeSlots);
+            $('#ServiceId').change(loadTimeSlots);
+            
+            if ('@Model.AppointmentDate' && '@Model.AppointmentDate' !== '0001-01-01T00:00:00') {
+                const date = new Date('@Model.AppointmentDate');
+                $('#appointmentDatePicker').val(date.toISOString().split('T')[0]);
+            }
+            
+            $('#appointmentDatePicker').change(function() {
+                const selectedDate = $(this).val();
+                const dateObj = new Date(selectedDate);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                
+                const currentCount = dailyAppointments[dateStr] || 0;
+                const availableSlots = maxDailyAppointments - currentCount;
+                
+                if (availableSlots <= 0) {
+                    const errorMsg = 'На эту дату уже нет свободных мест. Пожалуйста, выберите другую дату';
+                    $('[data-valmsg-for="AppointmentDate"]').text(errorMsg);
+                    $('#submitButton').prop('disabled', true);
+                } else if (availableSlots <= 3) {
+                    const warningMsg = `Внимание! На эту дату осталось всего ${availableSlots} ${getSlotWord(availableSlots)}`;
+                    $('[data-valmsg-for="AppointmentDate"]').text(warningMsg).removeClass('text-danger').addClass('text-warning');
+                    $('#submitButton').prop('disabled', false);
+                } else {
+                    $('[data-valmsg-for="AppointmentDate"]').text('');
+                    $('#submitButton').prop('disabled', false);
+                }
+            });
+            
+            function getSlotWord(num) {
+                if (num === 1) return 'место';
+                if (num >= 2 && num <= 4) return 'места';
+                return 'мест';
+            }
+            
+            $('#appointmentForm').on('submit', function(e) {
+                console.log('Форма отправляется');
+                
+                const serviceId = $('#ServiceId').val();
+                const carId = $('#CarId').val();
+                const appointmentDate = $('#AppointmentDate').val();
+                const timeSlot = $('#timeSlotSelect').val();
+                
+                console.log('ServiceId: ' + serviceId);
+                console.log('CarId: ' + carId);
+                console.log('AppointmentDate: ' + appointmentDate);
+                console.log('TimeSlot: ' + timeSlot);
+                
+                let isValid = true;
+                
+                if (!serviceId) {
+                    isValid = false;
+                    $('[data-valmsg-for="ServiceId"]').text('Выберите услугу');
+                }
+                
+                if (!carId) {
+                    isValid = false;
+                    $('[data-valmsg-for="CarId"]').text('Выберите автомобиль');
+                }
+                
+                if (!appointmentDate || !timeSlot) {
+                    isValid = false;
+                    $('[data-valmsg-for="AppointmentDate"]').text('Выберите дату и время');
+                }
+                
+                if (isValid) {
+                    $('#submitButton').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Обработка...');
+                    console.log('Форма валидна, отправляем');
+                    return true;
+                } else {
+                    console.log('Форма не валидна, отменяем отправку');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
+} 

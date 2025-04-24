@@ -1,0 +1,53 @@
+@model ShinSerwis.Models.User
+
+@{
+    ViewData["Title"] = "Удаление сотрудника";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title">Подтверждение удаления</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Внимание!</strong> Вы собираетесь удалить сотрудника из системы. Это действие невозможно отменить.
+                    </div>
+
+                    <h4>Данные сотрудника</h4>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-4">Имя пользователя</dt>
+                        <dd class="col-sm-8">@Model.Username</dd>
+
+                        <dt class="col-sm-4">Имя</dt>
+                        <dd class="col-sm-8">@Model.FirstName</dd>
+
+                        <dt class="col-sm-4">Фамилия</dt>
+                        <dd class="col-sm-8">@Model.LastName</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Телефон</dt>
+                        <dd class="col-sm-8">@Model.PhoneNumber</dd>
+                    </dl>
+
+                    <form asp-action="DeleteEmployee" asp-route-id="@Model.Id" method="post">
+                        <div class="d-flex justify-content-between mt-3">
+                            <a asp-action="Employees" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

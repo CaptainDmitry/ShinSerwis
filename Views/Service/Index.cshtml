@@ -1,0 +1,124 @@
+@model IEnumerable<ShinSerwis.Models.Service>
+
+@{
+    ViewData["Title"] = "Услуги";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Услуги</h1>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Добавить услугу
+            </a>
+        }
+    </div>
+
+    <div class="row">
+        @foreach (var service in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@service.Name</h5>
+                        <p class="card-text">
+                            @if (service.Description.Length > 100)
+                            {
+                                @(service.Description.Substring(0, 100) + "...")
+                            }
+                            else
+                            {
+                                @service.Description
+                            }
+                        </p>
+                        <p class="card-text">
+                            <strong>Цена:</strong> @service.Price.ToString("C")
+                        </p>
+                        <p class="card-text">
+                            <strong>Длительность:</strong> @service.DurationMinutes минут
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#serviceModal-@service.Id">
+                            <i class="fas fa-info-circle"></i> Подробнее
+                        </button>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@service.Id" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                        }
+                        @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin") && !User.IsInRole("Employee"))
+                        {
+                            <a asp-controller="Appointment" asp-action="Create" asp-route-serviceId="@service.Id" class="btn btn-primary">
+                                <i class="fas fa-calendar-plus"></i> Записаться
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal fade" id="serviceModal-@service.Id" tabindex="-1" aria-labelledby="serviceModalLabel-@service.Id" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title" id="serviceModalLabel-@service.Id">@service.Name</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5 class="fw-bold">Описание услуги</h5>
+                                    <p>@service.Description</p>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="fas fa-money-bill-wave"></i> Стоимость</h5>
+                                                    <p class="card-text fs-4">@service.Price.ToString("C")</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><i class="fas fa-clock"></i> Длительность</h5>
+                                                    <p class="card-text fs-4">@service.DurationMinutes минут</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin") && !User.IsInRole("Employee"))
+                            {
+                                <a asp-controller="Appointment" asp-action="Create" asp-route-serviceId="@service.Id" class="btn btn-primary">
+                                    <i class="fas fa-calendar-plus"></i> Записаться на услугу
+                                </a>
+                            }
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceId = urlParams.get('openModal');
+            
+            if (serviceId) {
+                const modalId = '#serviceModal-' + serviceId;
+                $(modalId).modal('show');
+            }
+        });
+    </script>
+} 

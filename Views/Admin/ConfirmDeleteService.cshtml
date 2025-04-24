@@ -1,0 +1,63 @@
+@model ShinSerwis.Models.Service
+
+@{
+    ViewData["Title"] = "Удаление услуги";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title">Подтверждение удаления</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Внимание!</strong> Вы собираетесь полностью удалить услугу из системы. Это действие невозможно отменить.
+                    </div>
+
+                    <h4>Данные услуги</h4>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-4">Название:</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4">Описание:</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+
+                        <dt class="col-sm-4">Цена:</dt>
+                        <dd class="col-sm-8">@Model.Price.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Длительность:</dt>
+                        <dd class="col-sm-8">@Model.DurationMinutes минут</dd>
+
+                        <dt class="col-sm-4">Статус:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Активна</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Неактивна</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    <form asp-action="DeleteService" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="d-flex justify-content-between mt-3">
+                            <a asp-action="Services" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

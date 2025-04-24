@@ -1,0 +1,148 @@
+@model ShinSerwis.Models.User
+
+@{
+    ViewData["Title"] = "Подробная информация о клиенте";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Информация о клиенте</h1>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Персональные данные</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <dl class="row">
+                        <dt class="col-sm-5">Имя пользователя</dt>
+                        <dd class="col-sm-7">@Model.Username</dd>
+
+                        <dt class="col-sm-5">Имя</dt>
+                        <dd class="col-sm-7">@Model.FirstName</dd>
+
+                        <dt class="col-sm-5">Фамилия</dt>
+                        <dd class="col-sm-7">@Model.LastName</dd>
+
+                        <dt class="col-sm-5">Email</dt>
+                        <dd class="col-sm-7">
+                            <a href="mailto:@Model.Email">@Model.Email</a>
+                        </dd>
+
+                        <dt class="col-sm-5">Телефон</dt>
+                        <dd class="col-sm-7">
+                            <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title">Автомобили клиента</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.Cars == null || !Model.Cars.Any())
+                    {
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">Нет автомобилей</h5>
+                            <p>У данного клиента еще не зарегистрировано ни одного автомобиля.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Марка</th>
+                                        <th>Модель</th>
+                                        <th>Год</th>
+                                        <th>Гос. номер</th>
+                                        <th>VIN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var car in Model.Cars)
+                                    {
+                                        <tr>
+                                            <td>@car.Brand</td>
+                                            <td>@car.Model</td>
+                                            <td>@car.Year</td>
+                                            <td>@car.LicensePlate</td>
+                                            <td>@(car.VIN ?? "Не указан")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title">История записей</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.Appointments == null || !Model.Appointments.Any())
+                    {
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">Нет записей</h5>
+                            <p>У данного клиента еще нет записей на обслуживание.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Услуга</th>
+                                        <th>Автомобиль</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model.Appointments.OrderByDescending(a => a.AppointmentDate))
+                                    {
+                                        <tr>
+                                            <td>@appointment.AppointmentDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>@appointment.Service.Name</td>
+                                            <td>@appointment.Car.Brand @appointment.Car.Model (@appointment.Car.LicensePlate)</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = appointment.Status switch
+                                                    {
+                                                        ShinSerwis.Models.AppointmentStatus.Pending => "bg-warning",
+                                                        ShinSerwis.Models.AppointmentStatus.InProgress => "bg-info",
+                                                        ShinSerwis.Models.AppointmentStatus.Completed => "bg-success",
+                                                        ShinSerwis.Models.AppointmentStatus.Cancelled => "bg-danger",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@appointment.Status</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a asp-action="Clients" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Вернуться к списку клиентов
+        </a>
+    </div>
+</div> 

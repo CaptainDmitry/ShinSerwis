@@ -1,0 +1,127 @@
+@model IEnumerable<ShinSerwis.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Управление записями";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Управление записями</h1>
+        <div>
+            <a asp-action="TodayAppointments" class="btn btn-info">
+                <i class="fas fa-calendar-day"></i> Записи на сегодня
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Фильтр по статусу</h5>
+                <div class="btn-group" role="group">
+                    <a asp-action="Appointments" class="btn @(ViewBag.CurrentStatus == null ? "btn-dark" : "btn-outline-dark")">
+                        Все
+                    </a>
+                    <a asp-action="Appointments" asp-route-status="@AppointmentStatus.Pending" 
+                        class="btn @(ViewBag.CurrentStatus == AppointmentStatus.Pending ? "btn-warning" : "btn-outline-warning")">
+                        Ожидающие
+                    </a>
+                    <a asp-action="Appointments" asp-route-status="@AppointmentStatus.InProgress" 
+                        class="btn @(ViewBag.CurrentStatus == AppointmentStatus.InProgress ? "btn-info" : "btn-outline-info")">
+                        В процессе
+                    </a>
+                    <a asp-action="Appointments" asp-route-status="@AppointmentStatus.Completed" 
+                        class="btn @(ViewBag.CurrentStatus == AppointmentStatus.Completed ? "btn-success" : "btn-outline-success")">
+                        Завершенные
+                    </a>
+                    <a asp-action="Appointments" asp-route-status="@AppointmentStatus.Cancelled" 
+                        class="btn @(ViewBag.CurrentStatus == AppointmentStatus.Cancelled ? "btn-danger" : "btn-outline-danger")">
+                        Отмененные
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Клиент</th>
+                            <th>Автомобиль</th>
+                            <th>Услуга</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var appointment in Model)
+                            {
+                                <tr>
+                                    <td>@appointment.AppointmentDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        <a asp-action="ClientDetails" asp-route-id="@appointment.UserId">
+                                            @appointment.User.LastName @appointment.User.FirstName
+                                        </a>
+                                    </td>
+                                    <td>@appointment.Car.Brand @appointment.Car.Model (@appointment.Car.LicensePlate)</td>
+                                    <td>@appointment.Service.Name</td>
+                                    <td>
+                                        @switch (appointment.Status)
+                                        {
+                                            case AppointmentStatus.Pending:
+                                                <span class="badge bg-warning">Ожидает</span>
+                                                break;
+                                            case AppointmentStatus.InProgress:
+                                                <span class="badge bg-info">В процессе</span>
+                                                break;
+                                            case AppointmentStatus.Completed:
+                                                <span class="badge bg-success">Выполнено</span>
+                                                break;
+                                            case AppointmentStatus.Cancelled:
+                                                <span class="badge bg-danger">Отменено</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="AppointmentDetails" asp-route-id="@appointment.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Детали
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-3">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        @if (ViewBag.CurrentStatus != null)
+                                        {
+                                            <span>Записей с выбранным статусом не найдено</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Нет записей на обслуживание</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

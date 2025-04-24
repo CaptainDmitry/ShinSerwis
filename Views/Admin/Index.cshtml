@@ -1,0 +1,106 @@
+@{
+    ViewData["Title"] = "Панель администратора";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Панель администратора</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-4x mb-3 text-primary"></i>
+                    <h3 class="card-title">Управление услугами</h3>
+                    <p class="card-text">Просмотр, добавление, редактирование и удаление услуг</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-controller="Admin" asp-action="Services" class="btn btn-primary">
+                        <i class="fas fa-list"></i> Все услуги
+                    </a>
+                    <a asp-controller="Service" asp-action="Create" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Добавить услугу
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-4x mb-3 text-info"></i>
+                    <h3 class="card-title">Записи на обслуживание</h3>
+                    <p class="card-text">Просмотр и управление записями клиентов на обслуживание</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-controller="Admin" asp-action="Appointments" class="btn btn-info">
+                        <i class="fas fa-list"></i> Все записи
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-4x mb-3 text-success"></i>
+                    <h3 class="card-title">Управление сотрудниками</h3>
+                    <p class="card-text">Просмотр, добавление, редактирование и удаление сотрудников</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-controller="Admin" asp-action="Employees" class="btn btn-success">
+                        <i class="fas fa-list"></i> Все сотрудники
+                    </a>
+                    <a asp-controller="Admin" asp-action="CreateEmployee" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Добавить сотрудника
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-friends fa-4x mb-3 text-warning"></i>
+                    <h3 class="card-title">Информация о клиентах</h3>
+                    <p class="card-text">Просмотр информации о клиентах и их автомобилях</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-controller="Admin" asp-action="Clients" class="btn btn-warning">
+                        <i class="fas fa-list"></i> Все клиенты
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-4x mb-3 text-secondary"></i>
+                    <h3 class="card-title">Статистика</h3>
+                    <p class="card-text">Просмотр статистики по услугам, клиентам и записям</p>
+                </div>
+                <div class="card-footer text-center">
+                    <a asp-action="Statistics" class="btn btn-secondary">
+                        <i class="fas fa-chart-bar"></i> Посмотреть статистику
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

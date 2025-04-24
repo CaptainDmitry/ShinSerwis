@@ -1,0 +1,83 @@
+@model ShinSerwis.ViewModels.AddCarViewModel
+
+@{
+    ViewData["Title"] = "Редактирование автомобиля";
+}
+
+<div class="container">
+    <h2>Редактирование автомобиля (ID: @Model.Id)</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="EditCar" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Brand" class="form-label">Марка автомобиля</label>
+                    <input asp-for="Brand" class="form-control" name="model.Brand" />
+                    <span asp-validation-for="Brand" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Model" class="form-label">Модель автомобиля</label>
+                    <input asp-for="Model" class="form-control" name="model.Model" />
+                    <span asp-validation-for="Model" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="LicensePlate" class="form-label">Гос. номер</label>
+                    <input asp-for="LicensePlate" class="form-control" name="model.LicensePlate" />
+                    <span asp-validation-for="LicensePlate" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Year" class="form-label">Год выпуска</label>
+                    <input asp-for="Year" class="form-control" name="model.Year" />
+                    <span asp-validation-for="Year" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="VIN" class="form-label">VIN-код (необязательно)</label>
+                    <div class="input-group">
+                        <input asp-for="VIN" class="form-control" name="model.VIN" />
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearVIN()">Очистить</button>
+                    </div>
+                    <small class="form-text text-muted">VIN-код должен содержать 17 символов</small>
+                    <span asp-validation-for="VIN" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a asp-controller="Profile" asp-action="Index" class="btn btn-secondary">Вернуться к списку</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function clearVIN() {
+            document.getElementById('@Html.IdFor(m => m.VIN)').value = '';
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const vinInput = document.getElementById('@Html.IdFor(m => m.VIN)');
+            
+            if (vinInput) {
+                vinInput.addEventListener('input', function() {
+                    const vinValue = this.value.trim();
+                    
+                    if (vinValue.length > 0 && vinValue.length !== 17) {
+                        this.setCustomValidity('VIN-код должен содержать 17 символов');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
+} 

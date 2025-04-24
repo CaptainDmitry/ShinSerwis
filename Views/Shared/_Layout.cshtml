@@ -1,0 +1,478 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ШИНСЕРВИС</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ShinSerwis.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <style>
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        .d-inline.d-sm-none {
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .notification-dropdown {
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            transition: background-color 0.2s;
+        }
+        
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .notification-item.unread {
+            background-color: #e9f5ff;
+        }
+        
+        .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+        }
+        
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .notifications-footer {
+            text-align: center;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ШИНСЕРВИС</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Главная</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Service" asp-action="Index">Услуги</a>
+                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @if (!User.IsInRole("Admin") && !User.IsInRole("Employee"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Appointment" asp-action="Index">Мои записи</a>
+                                </li>
+                            }
+                            
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Admin" asp-action="Index">Админ панель</a>
+                                </li>
+                            }
+                            @if (User.IsInRole("Employee"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Employee" asp-action="Appointments">Записи</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Employee" asp-action="Clients">Клиенты</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Employee" asp-action="TodayAppointments">На сегодня</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown me-3 d-none d-sm-block">
+                                <div class="notification-bell" id="notificationBell" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell fs-5 text-white"></i>
+                                    <span class="notification-badge d-none" id="notificationBadge">0</span>
+                                </div>
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown p-0" id="notificationDropdown">
+                                    <div class="notifications-header">
+                                        <h6 class="m-0">Уведомления</h6>
+                                        <button class="btn btn-sm btn-outline-secondary" id="markAllAsReadBtn">Отметить все как прочитанные</button>
+                                    </div>
+                                    <div id="notificationsList">
+                                        <div class="p-3 text-center text-secondary">
+                                            <i class="bi bi-hourglass"></i> Загрузка уведомлений...
+                                        </div>
+                                    </div>
+                                    <div class="notifications-footer">
+                                        <div class="d-flex justify-content-between">
+                                            <button class="btn btn-sm btn-outline-secondary" id="prevPageBtn" disabled>Назад</button>
+                                            <span id="paginationInfo">Страница 1</span>
+                                            <button class="btn btn-sm btn-outline-secondary" id="nextPageBtn" disabled>Вперед</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="nav-item d-block d-sm-none">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Уведомления
+                                    <span class="badge bg-danger rounded-pill d-none" id="mobileNotificationBadge">0</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown p-0">
+                                    <div class="notifications-header">
+                                        <h6 class="m-0">Уведомления</h6>
+                                        <button class="btn btn-sm btn-outline-secondary" id="mobilMarkAllAsReadBtn">Отметить все как прочитанные</button>
+                                    </div>
+                                    <div id="mobileNotificationsList">
+                                        <div class="p-3 text-center text-secondary">
+                                            <i class="bi bi-hourglass"></i> Загрузка уведомлений...
+                                        </div>
+                                    </div>
+                                    <div class="notifications-footer">
+                                        <div class="d-flex justify-content-between">
+                                            <button class="btn btn-sm btn-outline-secondary" id="mobilePrevPageBtn" disabled>Назад</button>
+                                            <span id="mobilePaginationInfo">Страница 1</span>
+                                            <button class="btn btn-sm btn-outline-secondary" id="mobileNextPageBtn" disabled>Вперед</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person"></i> Личный кабинет
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-link nav-link">Выйти</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Войти</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Регистрация</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - ШИНСЕРВИС - <a asp-controller="Home" asp-action="Privacy">Политика конфиденциальности</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+            $(document).ready(function() {
+                let currentPage = 1;
+                let totalPages = 1;
+                
+                function loadUnreadCount() {
+                    $.ajax({
+                        url: '@Url.Action("GetUnreadCount", "Notifications")',
+                        type: 'GET',
+                        success: function(data) {
+                            if (data.count > 0) {
+                                $('#notificationBadge').text(data.count);
+                                $('#notificationBadge').removeClass('d-none');
+                            } else {
+                                $('#notificationBadge').addClass('d-none');
+                            }
+                        }
+                    });
+                }
+                
+                function loadNotifications(page = 1) {
+                    $.ajax({
+                        url: '@Url.Action("GetNotifications", "Notifications")',
+                        type: 'GET',
+                        data: { page: page, pageSize: 5 },
+                        success: function(data) {
+                            let notificationsHtml = '';
+                            currentPage = page;
+                            totalPages = data.totalPages;
+                            
+                            $('#paginationInfo').text(`Страница ${currentPage} из ${totalPages}`);
+                            $('#prevPageBtn').prop('disabled', currentPage <= 1);
+                            $('#nextPageBtn').prop('disabled', currentPage >= totalPages);
+                            
+                            if (data.notifications.length === 0) {
+                                notificationsHtml = `
+                                    <div class="p-3 text-center text-secondary">
+                                        <i class="bi bi-bell-slash"></i> У вас нет уведомлений
+                                    </div>
+                                `;
+                            } else {
+                                data.notifications.forEach(notification => {
+                                    const unreadClass = notification.isRead ? '' : 'unread';
+                                    const typeIcon = getNotificationIcon(notification.type);
+                                    
+                                    notificationsHtml += `
+                                        <div class="notification-item ${unreadClass}" data-id="${notification.id}">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="me-2">${typeIcon}</div>
+                                                <div class="notification-title">${notification.title}</div>
+                                                <div class="ms-auto notification-time">${notification.createdAt}</div>
+                                            </div>
+                                            <div>${notification.message}</div>
+                                            ${notification.appointmentId ? 
+                                                `<a href="${getAppointmentDetailsUrl(notification.appointmentId)}" class="btn btn-sm btn-outline-primary mt-2">Перейти к записи</a>` 
+                                                : ''}
+                                        </div>
+                                    `;
+                                });
+                            }
+                            
+                            $('#notificationsList').html(notificationsHtml);
+                            
+                            $('.notification-item').click(function() {
+                                const id = $(this).data('id');
+                                if ($(this).hasClass('unread')) {
+                                    markAsRead(id);
+                                    $(this).removeClass('unread');
+                                    loadUnreadCount();
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                function getNotificationIcon(type) {
+                    switch(type) {
+                        case 0: // NewAppointment
+                            return '<i class="bi bi-calendar-plus text-primary"></i>';
+                        case 1: // StatusChanged
+                            return '<i class="bi bi-pencil-square text-warning"></i>';
+                        case 2: // FollowUpReminder
+                            return '<i class="bi bi-clock-history text-info"></i>';
+                        default:
+                            return '<i class="bi bi-bell"></i>';
+                    }
+                }
+                
+                function markAsRead(id) {
+                    $.ajax({
+                        url: '@Url.Action("MarkAsRead", "Notifications")',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function() {
+                            console.log('Notification marked as read');
+                        }
+                    });
+                }
+                
+                $('#markAllAsReadBtn').click(function(e) {
+                    e.stopPropagation();
+                    $.ajax({
+                        url: '@Url.Action("MarkAllAsRead", "Notifications")',
+                        type: 'POST',
+                        success: function() {
+                            $('.notification-item').removeClass('unread');
+                            $('#notificationBadge').addClass('d-none');
+                            console.log('All notifications marked as read');
+                        }
+                    });
+                });
+                
+                $('#prevPageBtn').click(function(e) {
+                    e.stopPropagation();
+                    if (currentPage > 1) {
+                        loadNotifications(currentPage - 1);
+                    }
+                });
+                
+                $('#nextPageBtn').click(function(e) {
+                    e.stopPropagation();
+                    if (currentPage < totalPages) {
+                        loadNotifications(currentPage + 1);
+                    }
+                });
+                
+                $('#notificationBell').on('shown.bs.dropdown', function() {
+                    loadNotifications();
+                });
+                
+                $('.dropdown-toggle').on('shown.bs.dropdown', function() {
+                    if ($(window).width() < 576) {
+                        loadMobileNotifications();
+                    }
+                });
+                
+                function loadMobileNotifications(page = 1) {
+                    $.ajax({
+                        url: '@Url.Action("GetNotifications", "Notifications")',
+                        type: 'GET',
+                        data: { page: page, pageSize: 5 },
+                        success: function(data) {
+                            let notificationsHtml = '';
+                            let currentMobilePage = page;
+                            let totalMobilePages = data.totalPages;
+                            
+                            $('#mobilePaginationInfo').text(`Страница ${currentMobilePage} из ${totalMobilePages}`);
+                            $('#mobilePrevPageBtn').prop('disabled', currentMobilePage <= 1);
+                            $('#mobileNextPageBtn').prop('disabled', currentMobilePage >= totalMobilePages);
+                            
+                            if (data.notifications.length === 0) {
+                                notificationsHtml = `
+                                    <div class="p-3 text-center text-secondary">
+                                        <i class="bi bi-bell-slash"></i> У вас нет уведомлений
+                                    </div>
+                                `;
+                            } else {
+                                data.notifications.forEach(notification => {
+                                    const unreadClass = notification.isRead ? '' : 'unread';
+                                    const typeIcon = getNotificationIcon(notification.type);
+                                    
+                                    notificationsHtml += `
+                                        <div class="notification-item ${unreadClass}" data-id="${notification.id}">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="me-2">${typeIcon}</div>
+                                                <div class="notification-title">${notification.title}</div>
+                                                <div class="ms-auto notification-time">${notification.createdAt}</div>
+                                            </div>
+                                            <div>${notification.message}</div>
+                                            ${notification.appointmentId ? 
+                                                `<a href="${getAppointmentDetailsUrl(notification.appointmentId)}" class="btn btn-sm btn-outline-primary mt-2">Перейти к записи</a>` 
+                                                : ''}
+                                        </div>
+                                    `;
+                                });
+                            }
+                            
+                            $('#mobileNotificationsList').html(notificationsHtml);
+                            
+                            $('#mobileNotificationsList .notification-item').click(function() {
+                                const id = $(this).data('id');
+                                if ($(this).hasClass('unread')) {
+                                    markAsRead(id);
+                                    $(this).removeClass('unread');
+                                    loadUnreadCount();
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                $('#mobilMarkAllAsReadBtn').click(function(e) {
+                    e.stopPropagation();
+                    $.ajax({
+                        url: '@Url.Action("MarkAllAsRead", "Notifications")',
+                        type: 'POST',
+                        success: function() {
+                            $('.notification-item').removeClass('unread');
+                            $('#notificationBadge').addClass('d-none');
+                            $('#mobileNotificationBadge').addClass('d-none');
+                            console.log('All notifications marked as read');
+                        }
+                    });
+                });
+                
+                $('#mobilePrevPageBtn').click(function(e) {
+                    e.stopPropagation();
+                    const currentPage = parseInt($('#mobilePaginationInfo').text().split(' ')[1]);
+                    if (currentPage > 1) {
+                        loadMobileNotifications(currentPage - 1);
+                    }
+                });
+                
+                $('#mobileNextPageBtn').click(function(e) {
+                    e.stopPropagation();
+                    const parts = $('#mobilePaginationInfo').text().split(' ');
+                    const currentPage = parseInt(parts[1]);
+                    const totalPages = parseInt(parts[3]);
+                    if (currentPage < totalPages) {
+                        loadMobileNotifications(currentPage + 1);
+                    }
+                });
+                
+                function updateMobileBadge() {
+                    if ($('#notificationBadge').hasClass('d-none')) {
+                        $('#mobileNotificationBadge').addClass('d-none');
+                    } else {
+                        $('#mobileNotificationBadge').removeClass('d-none');
+                        $('#mobileNotificationBadge').text($('#notificationBadge').text());
+                    }
+                }
+                
+                loadUnreadCount();
+                updateMobileBadge();
+                
+                setInterval(function() {
+                    loadUnreadCount();
+                    updateMobileBadge();
+                }, 60000);
+            });
+
+            function getAppointmentDetailsUrl(appointmentId) {
+                const isEmployee = @(User.IsInRole("Employee") ? "true" : "false");
+                const isAdmin = @(User.IsInRole("Admin") ? "true" : "false");
+                
+                if (isEmployee) {
+                    return '@Url.Action("AppointmentDetails", "Employee", new { id = -1 })'.replace('-1', appointmentId);
+                } else if (isAdmin) {
+                    return '@Url.Action("AppointmentDetails", "Admin", new { id = -1 })'.replace('-1', appointmentId);
+                } else {
+                    return '@Url.Action("AppointmentDetails", "Appointment", new { id = -1 })'.replace('-1', appointmentId);
+                }
+            }
+        </script>
+    }
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
